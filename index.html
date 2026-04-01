@@ -1,70 +1,152 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>My Habit Tracker</title>
+  <title>Habit Tracker Pro</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
     body {
-      font-family: Arial;
-      padding: 20px;
-      background: #f5f5f5;
+      font-family: -apple-system, Arial;
+      background: #0f172a;
+      color: white;
+      padding: 15px;
     }
+
     h2 { text-align: center; }
+
     input, button {
       padding: 10px;
-      width: 100%;
+      border-radius: 8px;
+      border: none;
       margin: 5px 0;
     }
-    li {
-      background: white;
+
+    input { width: 70%; }
+    button { cursor: pointer; }
+
+    .add-btn { background: #22c55e; color: white; }
+
+    .habit {
+      margin-top: 20px;
+      background: #1e293b;
       padding: 10px;
-      margin: 8px 0;
-      border-radius: 8px;
+      border-radius: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 5px;
+      margin-top: 10px;
+    }
+
+    .day {
+      padding: 8px;
+      text-align: center;
+      border-radius: 6px;
+      font-size: 12px;
+      background: #334155;
+    }
+
+    .done { background: #22c55e; }
+    .miss { background: #ef4444; }
+    .skip { background: #f59e0b; }
+
+    .actions button {
+      margin: 2px;
+      font-size: 10px;
+    }
+
+    .summary {
+      margin-top: 10px;
+      font-size: 12px;
+      opacity: 0.8;
     }
   </style>
 </head>
 
 <body>
 
-<h2>My Habit Tracker</h2>
+<h2>Habit Tracker</h2>
 
-<input type="text" id="habitInput" placeholder="Enter habit">
-<button onclick="addHabit()">Add Habit</button>
+<input id="habitInput" placeholder="Add new habit">
+<button class="add-btn" onclick="addHabit()">Add</button>
 
-<ul id="habitList"></ul>
+<div id="habits"></div>
 
 <script>
-  let habits = JSON.parse(localStorage.getItem("habits")) || [];
+let habits = JSON.parse(localStorage.getItem("habits")) || [];
 
-  function renderHabits() {
-    const list = document.getElementById("habitList");
-    list.innerHTML = "";
+function save() {
+  localStorage.setItem("habits", JSON.stringify(habits));
+}
 
-    habits.forEach((habit, index) => {
-      list.innerHTML += `
-        <li>
-          <b>${habit.name}</b><br>
-          Done: <input type="checkbox" ${habit.done ? "checked" : ""} onchange="toggleHabit(${index})">
-        </li>`;
+function addHabit() {
+  const input = document.getElementById("habitInput");
+  if (!input.value) return;
+
+  habits.push({
+    name: input.value,
+    days: Array(30).fill("") // 30-day tracking
+  });
+
+  input.value = "";
+  save();
+  render();
+}
+
+function setStatus(habitIndex, dayIndex, status) {
+  habits[habitIndex].days[dayIndex] = status;
+  save();
+  render();
+}
+
+function getClass(status) {
+  if (status === "done") return "done";
+  if (status === "miss") return "miss";
+  if (status === "skip") return "skip";
+  return "";
+}
+
+function render() {
+  const container = document.getElementById("habits");
+  container.innerHTML = "";
+
+  habits.forEach((habit, hIndex) => {
+    let done = habit.days.filter(d => d === "done").length;
+    let miss = habit.days.filter(d => d === "miss").length;
+    let skip = habit.days.filter(d => d === "skip").length;
+
+    let html = `<div class="habit">
+      <b>${habit.name}</b>
+
+      <div class="grid">`;
+
+    habit.days.forEach((status, dIndex) => {
+      html += `
+        <div class="day ${getClass(status)}">
+          ${dIndex + 1}
+          <div class="actions">
+            <button onclick="setStatus(${hIndex},${dIndex},'done')">✓</button>
+            <button onclick="setStatus(${hIndex},${dIndex},'miss')">✗</button>
+            <button onclick="setStatus(${hIndex},${dIndex},'skip')">O</button>
+          </div>
+        </div>`;
     });
-  }
 
-  function addHabit() {
-    const input = document.getElementById("habitInput");
-    habits.push({ name: input.value, done: false });
-    input.value = "";
-    localStorage.setItem("habits", JSON.stringify(habits));
-    renderHabits();
-  }
+    html += `</div>
 
-  function toggleHabit(index) {
-    habits[index].done = !habits[index].done;
-    localStorage.setItem("habits", JSON.stringify(habits));
-    renderHabits();
-  }
+      <div class="summary">
+        ✅ ${done} | ❌ ${miss} | ⚪ ${skip}
+      </div>
 
-  renderHabits();
+    </div>`;
+
+    container.innerHTML += html;
+  });
+}
+
+render();
 </script>
 
 </body>
