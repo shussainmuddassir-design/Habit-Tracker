@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Habit Tracker Pro</title>
+  <title>Habit Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
     body {
-      font-family: -apple-system, Arial;
+      font-family: -apple-system;
       background: #0f172a;
       color: white;
       padding: 15px;
@@ -21,73 +21,58 @@
       margin: 5px 0;
     }
 
-    input { width: 70%; }
-    button { cursor: pointer; }
-
-    .add-btn { background: #22c55e; color: white; }
-
     .habit {
-      margin-top: 20px;
       background: #1e293b;
       padding: 10px;
-      border-radius: 12px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(10, 1fr);
-      gap: 5px;
+      border-radius: 10px;
       margin-top: 10px;
     }
 
-    .day {
-      padding: 8px;
-      text-align: center;
-      border-radius: 6px;
-      font-size: 12px;
-      background: #334155;
+    .btns button {
+      margin: 3px;
     }
 
     .done { background: #22c55e; }
     .miss { background: #ef4444; }
     .skip { background: #f59e0b; }
 
-    .actions button {
-      margin: 2px;
-      font-size: 10px;
-    }
-
-    .summary {
-      margin-top: 10px;
-      font-size: 12px;
-      opacity: 0.8;
-    }
+    .hidden { display: none; }
   </style>
 </head>
 
 <body>
 
-<h2>Habit Tracker</h2>
+<h2 id="dateTitle"></h2>
 
-<input id="habitInput" placeholder="Add new habit">
-<button class="add-btn" onclick="addHabit()">Add</button>
+<input id="habitInput" placeholder="Add habit">
+<button onclick="addHabit()">Add</button>
+<button onclick="toggleView()">📅 Monthly View</button>
 
-<div id="habits"></div>
+<div id="dailyView"></div>
+<div id="monthlyView" class="hidden"></div>
 
 <script>
 let habits = JSON.parse(localStorage.getItem("habits")) || [];
 
+// Get current day (1–30)
+let today = new Date().getDate();
+if (today > 30) today = 30;
+
+document.getElementById("dateTitle").innerText = "Day " + today;
+
+// Save data
 function save() {
   localStorage.setItem("habits", JSON.stringify(habits));
 }
 
+// Add habit
 function addHabit() {
   const input = document.getElementById("habitInput");
   if (!input.value) return;
 
   habits.push({
     name: input.value,
-    days: Array(30).fill("") // 30-day tracking
+    days: Array(30).fill("miss") // default = ❌
   });
 
   input.value = "";
@@ -95,55 +80,64 @@ function addHabit() {
   render();
 }
 
-function setStatus(habitIndex, dayIndex, status) {
-  habits[habitIndex].days[dayIndex] = status;
+// Set status
+function setStatus(hIndex, status) {
+  habits[hIndex].days[today - 1] = status;
   save();
   render();
 }
 
-function getClass(status) {
-  if (status === "done") return "done";
-  if (status === "miss") return "miss";
-  if (status === "skip") return "skip";
-  return "";
-}
-
-function render() {
-  const container = document.getElementById("habits");
+// DAILY VIEW
+function renderDaily() {
+  const container = document.getElementById("dailyView");
   container.innerHTML = "";
 
-  habits.forEach((habit, hIndex) => {
-    let done = habit.days.filter(d => d === "done").length;
-    let miss = habit.days.filter(d => d === "miss").length;
-    let skip = habit.days.filter(d => d === "skip").length;
+  habits.forEach((habit, index) => {
+    let status = habit.days[today - 1];
 
-    let html = `<div class="habit">
-      <b>${habit.name}</b>
+    container.innerHTML += `
+      <div class="habit">
+        <b>${habit.name}</b>
+        <div class="btns">
+          <button onclick="setStatus(${index}, 'done')" class="done">✓</button>
+          <button onclick="setStatus(${index}, 'miss')" class="miss">✗</button>
+          <button onclick="setStatus(${index}, 'skip')" class="skip">O</button>
+        </div>
+        <div>Status: ${status}</div>
+      </div>
+    `;
+  });
+}
 
-      <div class="grid">`;
+// MONTHLY VIEW
+function renderMonthly() {
+  const container = document.getElementById("monthlyView");
+  container.innerHTML = "";
 
-    habit.days.forEach((status, dIndex) => {
-      html += `
-        <div class="day ${getClass(status)}">
-          ${dIndex + 1}
-          <div class="actions">
-            <button onclick="setStatus(${hIndex},${dIndex},'done')">✓</button>
-            <button onclick="setStatus(${hIndex},${dIndex},'miss')">✗</button>
-            <button onclick="setStatus(${hIndex},${dIndex},'skip')">O</button>
-          </div>
-        </div>`;
+  habits.forEach(habit => {
+    let html = `<div class="habit"><b>${habit.name}</b><br>`;
+
+    habit.days.forEach((d, i) => {
+      let symbol = d === "done" ? "✓" : d === "skip" ? "O" : "✗";
+      html += `${symbol} `;
+      if ((i+1) % 10 === 0) html += "<br>";
     });
 
-    html += `</div>
-
-      <div class="summary">
-        ✅ ${done} | ❌ ${miss} | ⚪ ${skip}
-      </div>
-
-    </div>`;
-
+    html += "</div>";
     container.innerHTML += html;
   });
+}
+
+// Toggle view
+function toggleView() {
+  document.getElementById("dailyView").classList.toggle("hidden");
+  document.getElementById("monthlyView").classList.toggle("hidden");
+}
+
+// Render all
+function render() {
+  renderDaily();
+  renderMonthly();
 }
 
 render();
