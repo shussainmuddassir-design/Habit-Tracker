@@ -14,7 +14,7 @@
 
     h2 { text-align: center; }
 
-    input, button {
+    input, button, select {
       padding: 10px;
       border-radius: 8px;
       border: none;
@@ -31,9 +31,7 @@
       align-items: center;
     }
 
-    .completed {
-      opacity: 0.4;
-    }
+    .completed { opacity: 0.4; }
 
     .monthly-table {
       margin-top: 20px;
@@ -42,8 +40,8 @@
 
     table {
       border-collapse: collapse;
-      width: 100%;
       font-size: 12px;
+      min-width: 800px;
     }
 
     th, td {
@@ -52,17 +50,18 @@
       text-align: center;
     }
 
-    .done {
-      background: #22c55e;
+    /* Freeze first column */
+    th:first-child, td:first-child {
+      position: sticky;
+      left: 0;
+      background: #1e293b;
+      z-index: 2;
     }
 
-    .miss {
-      background: #ef4444;
-    }
+    .done { background: #22c55e; }
+    .miss { background: #ef4444; }
 
-    .hidden {
-      display: none;
-    }
+    .hidden { display: none; }
 
   </style>
 </head>
@@ -75,28 +74,60 @@
 <button onclick="addHabit()">Add</button>
 <button onclick="toggleView()">📅 Monthly View</button>
 
+<br>
+
+<select id="monthSelect" onchange="changeMonth()"></select>
+
 <div id="dailyView"></div>
 <div id="monthlyView" class="hidden"></div>
 
 <script>
+let data = JSON.parse(localStorage.getItem("habitData")) || {};
 let habits = JSON.parse(localStorage.getItem("habits")) || [];
 
-let today = new Date().getDate();
-if (today > 30) today = 30;
+let today = new Date();
+let currentMonth = today.getMonth(); // 0-11
+let currentYear = today.getFullYear();
+let day = today.getDate();
 
-document.getElementById("dateTitle").innerText = "Day " + today;
+document.getElementById("dateTitle").innerText =
+  today.toDateString();
 
+// Month names
+const months = [
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December"
+];
+
+// Populate dropdown
+let select = document.getElementById("monthSelect");
+months.forEach((m, i) => {
+  select.innerHTML += `<option value="${i}">${m}</option>`;
+});
+select.value = currentMonth;
+
+// Save
 function save() {
+  localStorage.setItem("habitData", JSON.stringify(data));
   localStorage.setItem("habits", JSON.stringify(habits));
 }
 
+// Initialize month data
+function initMonth(monthKey) {
+  if (!data[monthKey]) {
+    data[monthKey] = habits.map(() => Array(31).fill("miss"));
+  }
+}
+
+// Add habit
 function addHabit() {
   const input = document.getElementById("habitInput");
   if (!input.value) return;
 
-  habits.push({
-    name: input.value,
-    days: Array(30).fill("miss")
+  habits.push(input.value);
+
+  Object.keys(data).forEach(month => {
+    data[month].push(Array(31).fill("miss"));
   });
 
   input.value = "";
@@ -104,50 +135,58 @@ function addHabit() {
   render();
 }
 
+// Toggle habit
 function toggleHabit(index) {
-  let current = habits[index].days[today - 1];
-  habits[index].days[today - 1] = current === "done" ? "miss" : "done";
+  let key = currentYear + "-" + currentMonth;
+  initMonth(key);
+
+  let status = data[key][index][day - 1];
+  data[key][index][day - 1] = status === "done" ? "miss" : "done";
+
   save();
   render();
 }
 
 // DAILY VIEW
 function renderDaily() {
+  let key = currentYear + "-" + currentMonth;
+  initMonth(key);
+
   const container = document.getElementById("dailyView");
   container.innerHTML = "";
 
-  habits.forEach((habit, index) => {
-    let isDone = habit.days[today - 1] === "done";
+  habits.forEach((habit, i) => {
+    let done = data[key][i][day - 1] === "done";
 
     container.innerHTML += `
-      <div class="habit ${isDone ? "completed" : ""}">
-        <span>${habit.name}</span>
-        <input type="checkbox" ${isDone ? "checked" : ""} 
-          onchange="toggleHabit(${index})">
+      <div class="habit ${done ? "completed" : ""}">
+        <span>${habit}</span>
+        <input type="checkbox" ${done ? "checked" : ""}
+          onchange="toggleHabit(${i})">
       </div>
     `;
   });
 }
 
-// MONTHLY VIEW (Excel style)
+// MONTHLY VIEW
 function renderMonthly() {
+  let key = currentYear + "-" + currentMonth;
+  initMonth(key);
+
   const container = document.getElementById("monthlyView");
 
   let html = `<div class="monthly-table"><table><tr><th>Habit</th>`;
 
-  // Header days
-  for (let i = 1; i <= 30; i++) {
+  for (let i = 1; i <= 31; i++) {
     html += `<th>${i}</th>`;
   }
   html += `</tr>`;
 
-  // Rows
-  habits.forEach(habit => {
-    html += `<tr><td>${habit.name}</td>`;
+  habits.forEach((habit, i) => {
+    html += `<tr><td>${habit}</td>`;
 
-    habit.days.forEach(d => {
-      let cls = d === "done" ? "done" : "miss";
-      html += `<td class="${cls}"></td>`;
+    data[key][i].forEach(d => {
+      html += `<td class="${d === "done" ? "done" : "miss"}"></td>`;
     });
 
     html += `</tr>`;
@@ -161,6 +200,12 @@ function renderMonthly() {
 function toggleView() {
   document.getElementById("dailyView").classList.toggle("hidden");
   document.getElementById("monthlyView").classList.toggle("hidden");
+}
+
+// Change month
+function changeMonth() {
+  currentMonth = parseInt(document.getElementById("monthSelect").value);
+  render();
 }
 
 function render() {
