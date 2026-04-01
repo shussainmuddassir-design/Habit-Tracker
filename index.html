@@ -12,10 +12,7 @@
       padding: 15px;
     }
 
-    h2 {
-      text-align: center;
-      margin-bottom: 10px;
-    }
+    h2 { text-align: center; }
 
     input, button, select {
       padding: 10px;
@@ -39,16 +36,9 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      transition: 0.3s;
     }
 
-    .habit:hover {
-      transform: scale(1.02);
-    }
-
-    .completed {
-      opacity: 0.4;
-    }
+    .completed { opacity: 0.4; }
 
     .progress {
       height: 6px;
@@ -90,6 +80,12 @@
     }
 
     .hidden { display: none; }
+
+    .top-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
   </style>
 </head>
 
@@ -97,11 +93,12 @@
 
 <h2 id="dateTitle"></h2>
 
-<input id="habitInput" placeholder="Add habit">
-<button onclick="addHabit()">Add</button>
-<button onclick="toggleView()">📅 Monthly</button>
-
-<br>
+<div class="top-bar">
+  <input id="habitInput" placeholder="Add habit">
+  <button onclick="addHabit()">Add</button>
+  <button onclick="toggleView()">📅 Monthly</button>
+  <button onclick="clearData()">🧹 Reset</button>
+</div>
 
 <select id="monthSelect" onchange="changeMonth()"></select>
 
@@ -112,13 +109,15 @@
 let data = JSON.parse(localStorage.getItem("habitData")) || {};
 let habits = JSON.parse(localStorage.getItem("habits")) || [];
 
+// 🧠 FIX: Clean old object-based data automatically
+habits = habits.map(h => typeof h === "object" ? h.name : h);
+
 let todayDate = new Date();
 let currentMonth = todayDate.getMonth();
 let currentYear = todayDate.getFullYear();
 let today = todayDate.getDate();
 
-document.getElementById("dateTitle").innerText =
-  todayDate.toDateString();
+document.getElementById("dateTitle").innerText = todayDate.toDateString();
 
 const months = [
   "January","February","March","April","May","June",
@@ -134,6 +133,13 @@ select.value = currentMonth;
 function save() {
   localStorage.setItem("habitData", JSON.stringify(data));
   localStorage.setItem("habits", JSON.stringify(habits));
+}
+
+function clearData() {
+  if (confirm("Reset all data?")) {
+    localStorage.clear();
+    location.reload();
+  }
 }
 
 function initMonth(key) {
@@ -209,6 +215,15 @@ function renderMonthly() {
 
   for (let i = 1; i <= 31; i++) {
     html += `<th class="${i === today ? "today" : ""}">${i}</th>`;
+  }
+
+  html += `</tr><tr><th></th>`;
+
+  // Weekday row
+  let days = ["S","M","T","W","T","F","S"];
+  for (let i = 1; i <= 31; i++) {
+    let d = new Date(currentYear, currentMonth, i).getDay();
+    html += `<th>${days[d]}</th>`;
   }
 
   html += `</tr>`;
