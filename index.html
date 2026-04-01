@@ -23,20 +23,47 @@
 
     .habit {
       background: #1e293b;
-      padding: 10px;
+      padding: 12px;
       border-radius: 10px;
       margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    .btns button {
-      margin: 3px;
+    .completed {
+      opacity: 0.4;
     }
 
-    .done { background: #22c55e; }
-    .miss { background: #ef4444; }
-    .skip { background: #f59e0b; }
+    .monthly-table {
+      margin-top: 20px;
+      overflow-x: auto;
+    }
 
-    .hidden { display: none; }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 12px;
+    }
+
+    th, td {
+      border: 1px solid #334155;
+      padding: 6px;
+      text-align: center;
+    }
+
+    .done {
+      background: #22c55e;
+    }
+
+    .miss {
+      background: #ef4444;
+    }
+
+    .hidden {
+      display: none;
+    }
+
   </style>
 </head>
 
@@ -54,25 +81,22 @@
 <script>
 let habits = JSON.parse(localStorage.getItem("habits")) || [];
 
-// Get current day (1–30)
 let today = new Date().getDate();
 if (today > 30) today = 30;
 
 document.getElementById("dateTitle").innerText = "Day " + today;
 
-// Save data
 function save() {
   localStorage.setItem("habits", JSON.stringify(habits));
 }
 
-// Add habit
 function addHabit() {
   const input = document.getElementById("habitInput");
   if (!input.value) return;
 
   habits.push({
     name: input.value,
-    days: Array(30).fill("miss") // default = ❌
+    days: Array(30).fill("miss")
   });
 
   input.value = "";
@@ -80,9 +104,9 @@ function addHabit() {
   render();
 }
 
-// Set status
-function setStatus(hIndex, status) {
-  habits[hIndex].days[today - 1] = status;
+function toggleHabit(index) {
+  let current = habits[index].days[today - 1];
+  habits[index].days[today - 1] = current === "done" ? "miss" : "done";
   save();
   render();
 }
@@ -93,39 +117,44 @@ function renderDaily() {
   container.innerHTML = "";
 
   habits.forEach((habit, index) => {
-    let status = habit.days[today - 1];
+    let isDone = habit.days[today - 1] === "done";
 
     container.innerHTML += `
-      <div class="habit">
-        <b>${habit.name}</b>
-        <div class="btns">
-          <button onclick="setStatus(${index}, 'done')" class="done">✓</button>
-          <button onclick="setStatus(${index}, 'miss')" class="miss">✗</button>
-          <button onclick="setStatus(${index}, 'skip')" class="skip">O</button>
-        </div>
-        <div>Status: ${status}</div>
+      <div class="habit ${isDone ? "completed" : ""}">
+        <span>${habit.name}</span>
+        <input type="checkbox" ${isDone ? "checked" : ""} 
+          onchange="toggleHabit(${index})">
       </div>
     `;
   });
 }
 
-// MONTHLY VIEW
+// MONTHLY VIEW (Excel style)
 function renderMonthly() {
   const container = document.getElementById("monthlyView");
-  container.innerHTML = "";
 
+  let html = `<div class="monthly-table"><table><tr><th>Habit</th>`;
+
+  // Header days
+  for (let i = 1; i <= 30; i++) {
+    html += `<th>${i}</th>`;
+  }
+  html += `</tr>`;
+
+  // Rows
   habits.forEach(habit => {
-    let html = `<div class="habit"><b>${habit.name}</b><br>`;
+    html += `<tr><td>${habit.name}</td>`;
 
-    habit.days.forEach((d, i) => {
-      let symbol = d === "done" ? "✓" : d === "skip" ? "O" : "✗";
-      html += `${symbol} `;
-      if ((i+1) % 10 === 0) html += "<br>";
+    habit.days.forEach(d => {
+      let cls = d === "done" ? "done" : "miss";
+      html += `<td class="${cls}"></td>`;
     });
 
-    html += "</div>";
-    container.innerHTML += html;
+    html += `</tr>`;
   });
+
+  html += `</table></div>`;
+  container.innerHTML = html;
 }
 
 // Toggle view
@@ -134,7 +163,6 @@ function toggleView() {
   document.getElementById("monthlyView").classList.toggle("hidden");
 }
 
-// Render all
 function render() {
   renderDaily();
   renderMonthly();
