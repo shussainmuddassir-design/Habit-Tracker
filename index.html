@@ -1,47 +1,72 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Habit Tracker</title>
+  <title>Habit Tracker Pro</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
     body {
       font-family: -apple-system;
-      background: #0f172a;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
       color: white;
       padding: 15px;
     }
 
-    h2 { text-align: center; }
+    h2 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
 
     input, button, select {
       padding: 10px;
-      border-radius: 8px;
+      border-radius: 10px;
       border: none;
       margin: 5px 0;
     }
 
+    button {
+      background: #22c55e;
+      color: white;
+      cursor: pointer;
+    }
+
     .habit {
-      background: #1e293b;
-      padding: 12px;
-      border-radius: 10px;
-      margin-top: 10px;
+      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.05);
+      padding: 14px;
+      border-radius: 14px;
+      margin-top: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      transition: 0.3s;
     }
 
-    .completed { opacity: 0.4; }
+    .habit:hover {
+      transform: scale(1.02);
+    }
 
-    .monthly-table {
-      margin-top: 20px;
-      overflow-x: auto;
+    .completed {
+      opacity: 0.4;
+    }
+
+    .progress {
+      height: 6px;
+      background: #334155;
+      border-radius: 5px;
+      margin-top: 5px;
+      overflow: hidden;
+    }
+
+    .bar {
+      height: 100%;
+      background: #22c55e;
     }
 
     table {
       border-collapse: collapse;
       font-size: 12px;
-      min-width: 800px;
+      min-width: 900px;
     }
 
     th, td {
@@ -50,7 +75,6 @@
       text-align: center;
     }
 
-    /* Freeze first column */
     th:first-child, td:first-child {
       position: sticky;
       left: 0;
@@ -61,8 +85,11 @@
     .done { background: #22c55e; }
     .miss { background: #ef4444; }
 
-    .hidden { display: none; }
+    .today {
+      border: 2px solid #38bdf8;
+    }
 
+    .hidden { display: none; }
   </style>
 </head>
 
@@ -72,7 +99,7 @@
 
 <input id="habitInput" placeholder="Add habit">
 <button onclick="addHabit()">Add</button>
-<button onclick="toggleView()">📅 Monthly View</button>
+<button onclick="toggleView()">📅 Monthly</button>
 
 <br>
 
@@ -85,49 +112,44 @@
 let data = JSON.parse(localStorage.getItem("habitData")) || {};
 let habits = JSON.parse(localStorage.getItem("habits")) || [];
 
-let today = new Date();
-let currentMonth = today.getMonth(); // 0-11
-let currentYear = today.getFullYear();
-let day = today.getDate();
+let todayDate = new Date();
+let currentMonth = todayDate.getMonth();
+let currentYear = todayDate.getFullYear();
+let today = todayDate.getDate();
 
 document.getElementById("dateTitle").innerText =
-  today.toDateString();
+  todayDate.toDateString();
 
-// Month names
 const months = [
   "January","February","March","April","May","June",
   "July","August","September","October","November","December"
 ];
 
-// Populate dropdown
 let select = document.getElementById("monthSelect");
 months.forEach((m, i) => {
   select.innerHTML += `<option value="${i}">${m}</option>`;
 });
 select.value = currentMonth;
 
-// Save
 function save() {
   localStorage.setItem("habitData", JSON.stringify(data));
   localStorage.setItem("habits", JSON.stringify(habits));
 }
 
-// Initialize month data
-function initMonth(monthKey) {
-  if (!data[monthKey]) {
-    data[monthKey] = habits.map(() => Array(31).fill("miss"));
+function initMonth(key) {
+  if (!data[key]) {
+    data[key] = habits.map(() => Array(31).fill("miss"));
   }
 }
 
-// Add habit
 function addHabit() {
   const input = document.getElementById("habitInput");
   if (!input.value) return;
 
   habits.push(input.value);
 
-  Object.keys(data).forEach(month => {
-    data[month].push(Array(31).fill("miss"));
+  Object.keys(data).forEach(m => {
+    data[m].push(Array(31).fill("miss"));
   });
 
   input.value = "";
@@ -135,13 +157,12 @@ function addHabit() {
   render();
 }
 
-// Toggle habit
-function toggleHabit(index) {
+function toggleHabit(i) {
   let key = currentYear + "-" + currentMonth;
   initMonth(key);
 
-  let status = data[key][index][day - 1];
-  data[key][index][day - 1] = status === "done" ? "miss" : "done";
+  let val = data[key][i][today - 1];
+  data[key][i][today - 1] = val === "done" ? "miss" : "done";
 
   save();
   render();
@@ -152,16 +173,25 @@ function renderDaily() {
   let key = currentYear + "-" + currentMonth;
   initMonth(key);
 
-  const container = document.getElementById("dailyView");
+  let container = document.getElementById("dailyView");
   container.innerHTML = "";
 
   habits.forEach((habit, i) => {
-    let done = data[key][i][day - 1] === "done";
+    let days = data[key][i];
+    let doneCount = days.filter(d => d === "done").length;
+    let percent = Math.round((doneCount / 30) * 100);
+
+    let isDone = days[today - 1] === "done";
 
     container.innerHTML += `
-      <div class="habit ${done ? "completed" : ""}">
-        <span>${habit}</span>
-        <input type="checkbox" ${done ? "checked" : ""}
+      <div class="habit ${isDone ? "completed" : ""}">
+        <div>
+          <b>${habit}</b>
+          <div class="progress">
+            <div class="bar" style="width:${percent}%"></div>
+          </div>
+        </div>
+        <input type="checkbox" ${isDone ? "checked" : ""} 
           onchange="toggleHabit(${i})">
       </div>
     `;
@@ -173,36 +203,35 @@ function renderMonthly() {
   let key = currentYear + "-" + currentMonth;
   initMonth(key);
 
-  const container = document.getElementById("monthlyView");
+  let container = document.getElementById("monthlyView");
 
-  let html = `<div class="monthly-table"><table><tr><th>Habit</th>`;
+  let html = `<table><tr><th>Habit</th>`;
 
   for (let i = 1; i <= 31; i++) {
-    html += `<th>${i}</th>`;
+    html += `<th class="${i === today ? "today" : ""}">${i}</th>`;
   }
+
   html += `</tr>`;
 
   habits.forEach((habit, i) => {
     html += `<tr><td>${habit}</td>`;
 
-    data[key][i].forEach(d => {
-      html += `<td class="${d === "done" ? "done" : "miss"}"></td>`;
+    data[key][i].forEach((d, index) => {
+      html += `<td class="${d === "done" ? "done" : "miss"} ${index+1===today?"today":""}"></td>`;
     });
 
     html += `</tr>`;
   });
 
-  html += `</table></div>`;
+  html += `</table>`;
   container.innerHTML = html;
 }
 
-// Toggle view
 function toggleView() {
   document.getElementById("dailyView").classList.toggle("hidden");
   document.getElementById("monthlyView").classList.toggle("hidden");
 }
 
-// Change month
 function changeMonth() {
   currentMonth = parseInt(document.getElementById("monthSelect").value);
   render();
