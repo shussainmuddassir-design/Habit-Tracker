@@ -58,13 +58,9 @@
 
     .completed { opacity: 0.4; }
 
-    .section {
-      margin-top: 15px;
-    }
+    .section { margin-top: 15px; }
 
-    .section h3 {
-      cursor: pointer;
-    }
+    .section h3 { cursor: pointer; }
 
     .hidden { display: none; }
 
@@ -88,7 +84,6 @@
 
     .done { background: #22c55e; }
     .miss { background: #ef4444; }
-
     .future { background: #ffffff; color: black; }
 
     .bottom-nav {
@@ -106,9 +101,9 @@
       cursor: pointer;
     }
 
-    .active-tab {
-      background: #22c55e;
-    }
+    .active-tab { background: #22c55e; }
+
+    #monthContainer { margin-top: 10px; }
   </style>
 </head>
 
@@ -130,13 +125,15 @@
 <div id="dailyView"></div>
 
 <div class="section">
-  <h3 onclick="toggleCompleted()">Completed ▼</h3>
+  <h3 id="completedHeader" onclick="toggleCompleted()">Completed ▶</h3>
   <div id="completedSection" class="hidden"></div>
 </div>
 
-<div id="monthlyView" class="hidden"></div>
+<div id="monthContainer" class="hidden">
+  <select id="monthSelect" onchange="changeMonth()"></select>
+</div>
 
-<select id="monthSelect" class="hidden" onchange="changeMonth()"></select>
+<div id="monthlyView" class="hidden"></div>
 
 <div class="bottom-nav">
   <div class="tab active-tab" onclick="switchTab('daily')">Daily</div>
@@ -155,8 +152,7 @@ let currentMonth = todayDate.getMonth();
 let currentYear = todayDate.getFullYear();
 let today = todayDate.getDate();
 
-document.getElementById("dateTitle").innerText =
-  todayDate.toDateString();
+document.getElementById("dateTitle").innerText = todayDate.toDateString();
 
 const months = ["January","February","March","April","May","June",
 "July","August","September","October","November","December"];
@@ -190,7 +186,7 @@ function initMonth(key){
 
 function addHabit(){
   let input = document.getElementById("habitInput");
-  if(!input.value) return;
+  if(!input.value.trim()) return;
 
   habits.push(input.value);
   Object.keys(data).forEach(m=> data[m].push(Array(31).fill("")));
@@ -206,6 +202,12 @@ function toggleHabit(i){
   data[key][i][today-1] = val==="done" ? "" : "done";
 
   save(); render();
+}
+
+function editHabit(i,val){
+  habits[i]=val.trim();
+  save();
+  render();
 }
 
 function renderDaily(){
@@ -236,19 +238,23 @@ function renderDaily(){
   document.getElementById("completedSection").innerHTML = completedHTML;
 }
 
-function editHabit(i,val){
-  habits[i]=val;
-  save();
-}
-
 function toggleCompleted(){
-  let el=document.getElementById("completedSection");
+  let el = document.getElementById("completedSection");
+  let header = document.getElementById("completedHeader");
+
   el.classList.toggle("hidden");
+
+  header.innerText = el.classList.contains("hidden") 
+    ? "Completed ▶" 
+    : "Completed ▼";
 }
 
 function renderMonthly(){
   let key = currentYear+"-"+currentMonth;
   initMonth(key);
+
+  let now = new Date();
+  let isCurrentMonth = (currentMonth === now.getMonth() && currentYear === now.getFullYear());
 
   let html="<table><tr><th>Habit</th>";
 
@@ -271,9 +277,14 @@ function renderMonthly(){
 
     data[key][i].forEach((d,idx)=>{
       let cls="";
-      if(idx+1 < today) cls = d==="done"?"done":"miss";
-      else if(idx+1 === today) cls = d==="done"?"done":"";
-      else cls="future";
+
+      if (isCurrentMonth) {
+        if(idx+1 < now.getDate()) cls = d==="done"?"done":"miss";
+        else if(idx+1 === now.getDate()) cls = d==="done"?"done":"";
+        else cls="future";
+      } else {
+        cls = d==="done" ? "done" : (d ? "miss" : "");
+      }
 
       html+=`<td class="${cls}"></td>`;
     });
@@ -289,14 +300,14 @@ function switchTab(tab){
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active-tab"));
 
   if(tab==="daily"){
-    document.getElementById("dailyView").classList.remove("hidden");
-    document.getElementById("monthlyView").classList.add("hidden");
-    document.getElementById("monthSelect").classList.add("hidden");
+    dailyView.classList.remove("hidden");
+    monthlyView.classList.add("hidden");
+    monthContainer.classList.add("hidden");
     document.querySelectorAll(".tab")[0].classList.add("active-tab");
   } else {
-    document.getElementById("dailyView").classList.add("hidden");
-    document.getElementById("monthlyView").classList.remove("hidden");
-    document.getElementById("monthSelect").classList.remove("hidden");
+    dailyView.classList.add("hidden");
+    monthlyView.classList.remove("hidden");
+    monthContainer.classList.remove("hidden");
     document.querySelectorAll(".tab")[1].classList.add("active-tab");
   }
 }
