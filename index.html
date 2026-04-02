@@ -88,12 +88,18 @@
     }
   </style>
 </head>
-
+  
 <body>
-
-<h2 id="dateTitle"></h2>
-
+  
 <div class="top-bar">
+  <h3 id="dateTitle"></h3>
+  <div>
+    <span onclick="toggleMenu()">⚙️</span>
+    <div id="menu" style="display:none;">
+      <button onclick="clearData()">Reset</button>
+    </div>
+  </div>
+</div>
   <input id="habitInput" placeholder="Add habit">
   <button onclick="addHabit()">Add</button>
   <button onclick="toggleView()">📅 Monthly</button>
@@ -108,6 +114,7 @@
 <script>
 let data = JSON.parse(localStorage.getItem("habitData")) || {};
 let habits = JSON.parse(localStorage.getItem("habits")) || [];
+  habits = habits.map(h => typeof h === "object" ? h.name : h);
 
 // 🧠 FIX: Clean old object-based data automatically
 habits = habits.map(h => typeof h === "object" ? h.name : h);
@@ -142,6 +149,11 @@ function clearData() {
   }
 }
 
+function toggleMenu(){
+let m = document.getElementById("menu");
+m.style.display = m.style.display === "block" ? "none" : "block";
+}
+  
 function initMonth(key) {
   if (!data[key]) {
     data[key] = habits.map(() => Array(31).fill("miss"));
@@ -179,31 +191,43 @@ function renderDaily() {
   let key = currentYear + "-" + currentMonth;
   initMonth(key);
 
-  let container = document.getElementById("dailyView");
-  container.innerHTML = "";
+  let activeHTML = "";
+let completedHTML = "";
 
-  habits.forEach((habit, i) => {
-    let days = data[key][i];
-    let doneCount = days.filter(d => d === "done").length;
-    let percent = Math.round((doneCount / 30) * 100);
+habits.forEach((habit, index) => {
+  let isDone = data[key][index][today - 1] === "done";
 
-    let isDone = days[today - 1] === "done";
+  let row = `
+    <div class="habit ${isDone ? "completed" : ""}">
+      <span contenteditable="true" 
+        onblur="editHabit(${index}, this.innerText)">
+        ${habit}
+      </span>
+      <input type="checkbox" ${isDone ? "checked" : ""} 
+        onchange="toggleHabit(${index})">
+    </div>
+  `;
 
-    container.innerHTML += `
-      <div class="habit ${isDone ? "completed" : ""}">
-        <div>
-          <b>${habit}</b>
-          <div class="progress">
-            <div class="bar" style="width:${percent}%"></div>
-          </div>
-        </div>
-        <input type="checkbox" ${isDone ? "checked" : ""} 
-          onchange="toggleHabit(${i})">
-      </div>
-    `;
-  });
+  if(isDone) completedHTML += row;
+  else activeHTML += row;
+});
+
+document.getElementById("dailyView").innerHTML = activeHTML;
+document.getElementById("completedSection").innerHTML = completedHTML;
 }
-
+function editHabit(i, val){
+  habits[i] = val;
+  save();
+}
+  <div>
+  <h3 onclick="toggleCompleted()">Completed ▼</h3>
+  <div id="completedSection" style="display:none;"></div>
+</div>
+function toggleCompleted(){
+  let el = document.getElementById("completedSection");
+  el.style.display = el.style.display === "none" ? "block" : "none";
+}
+  
 // MONTHLY VIEW
 function renderMonthly() {
   let key = currentYear + "-" + currentMonth;
@@ -256,9 +280,22 @@ function render() {
   renderDaily();
   renderMonthly();
 }
-
+<div class="bottom-nav">
+  <div onclick="switchTab('daily')">Daily</div>
+  <div onclick="switchTab('monthly')">Monthly</div>
+</div>
+  function switchTab(tab){
+  if(tab === "daily"){
+    dailyView.style.display = "block";
+    monthlyView.style.display = "none";
+  } else {
+    dailyView.style.display = "none";
+    monthlyView.style.display = "block";
+  }
+}
 render();
 </script>
 
 </body>
+  
 </html>
