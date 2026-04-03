@@ -312,20 +312,6 @@ function switchTab(tab){
   }
 }
     
-function switchTab(tab) {
-    const completedHeader = document.getElementById('completedHeader');
-    const completedSection = document.getElementById('completedSection');
-
-    if (tab === 'monthly') {
-        completedHeader.classList.add('hidden');
-        completedSection.classList.add('hidden');
-    } else if (tab === 'daily') {
-        completedHeader.classList.remove('hidden');
-        completedSection.classList.remove('hidden');
-    }
-    // Additional code for switching tabs...
-}
-    
 function changeMonth(){
   currentMonth=parseInt(document.getElementById("monthSelect").value);
   render();
