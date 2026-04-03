@@ -93,33 +93,35 @@
 
     .hidden { display: none; }
 
-   table {
+  table {
   border-collapse: collapse;
   width: 100%;
   font-size: 12px;
-  table-layout: auto;
+  table-layout: fixed;  /* ← CHANGE from "auto" to "fixed" */
 }
 
 th, td {
   border: 1px solid #334155;
   padding: 8px 6px;
   text-align: center;
-  height: auto;
-  width: auto;
-  min-width: auto;
+  height: 40px;         /* ← CHANGE from "auto" to "40px" */
+  width: 40px;          /* ← CHANGE from "auto" to "40px" */
+  min-width: 40px;      /* ← CHANGE from "auto" to "40px" */
+  white-space: nowrap;  /* ← ADD: prevents text wrapping */
 }
 
 th:first-child, td:first-child {
   position: sticky;
   left: 0;
   background: #1e293b;
-  width: auto;
-  min-width: auto;
+  width: auto;          /* ← KEEP: allows dynamic width */
+  min-width: auto;      /* ← KEEP: allows dynamic width */
+  height: auto;         /* ← ADD: allows dynamic height for habit names */
   padding: 8px 10px;
   text-align: left;
-  white-space: normal;
-  overflow: visible;
-  word-break: break-word;
+  white-space: nowrap;  /* ← ADD: keeps habit names in one line */
+  overflow: hidden;     /* ← ADD: prevents overflow */
+  text-overflow: ellipsis; /* ← ADD: shows ... if text is too long */
 }
 
     .done { background: #22c55e; }
@@ -304,26 +306,25 @@ function renderMonthly(){
 let maxLength = Math.max(...habits.map(h => h.length), 7); // minimum 7 for "Habit"
 let habitColWidth = Math.min(200, 80 + (maxLength * 8));
 
-let html=`<table style="width: auto;"><tr><th style="width: ${habitColWidth}px; min-width: ${habitColWidth}px; vertical-align: middle;" rowspan="2">Habit</th>`;
-
+let html=`<table style="width: auto;"><tr><th style="width: ${habitColWidth}px; min-width: ${habitColWidth}px; height: auto; vertical-align: middle;" rowspan="2">Habit</th>`;
 // First row - Days of week
 let days=["S","M","T","W","T","F","S"];
 for(let i=1;i<=31;i++){
   let d=new Date(currentYear,currentMonth,i).getDay();
-  html+=`<th>${days[d]}</th>`;
+ html+=`<th style="width: 40px; height: 40px;">${days[d]}</th>`;
 }
 
 html+="</tr><tr>";
 
 // Second row - Dates (1-31)
 for(let i=1;i<=31;i++){
-  html+=`<th>${i}</th>`;
+ html+=`<th style="width: 40px; height: 40px;">${i}</th>`;
 }
 
 html+="</tr>";
 
   habits.forEach((h,i)=>{
-    html+=`<tr><td>${h}</td>`;
+   html+=`<tr><td style="width: auto; height: auto;">${h}</td>`;
 
     data[key][i].forEach((d,idx)=>{
       let cls="";
