@@ -102,11 +102,11 @@
 
 th, td {
   border: 1px solid #334155;
-  padding: 6px;
+  padding: 8px 6px;
   text-align: center;
-  height: 40px;
-  width: 40px;
-  min-width: 40px;
+  height: auto;
+  width: auto;
+  min-width: auto;
 }
 
 th:first-child, td:first-child {
@@ -117,9 +117,9 @@ th:first-child, td:first-child {
   min-width: auto;
   padding: 8px 10px;
   text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  word-break: break-word;
 }
 
     .done { background: #22c55e; }
@@ -352,7 +352,7 @@ function switchTab(tab){
     dailyView.classList.remove("hidden");
     monthlyView.classList.add("hidden");
     monthContainer.classList.add("hidden");
-    document.getElementById("completedSection").classList.remove("hidden");
+   document.getElementById("completedSection").classList.add("hidden");
     document.querySelectorAll(".tab")[0].classList.add("active-tab");
   } else {
     dailyView.classList.add("hidden");
