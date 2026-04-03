@@ -105,8 +105,8 @@ th, td {
   padding: 8px 6px;
   text-align: center;
   height: auto;         /* ← CHANGE from "auto" to "40px" */
-  width: auto;          /* ← CHANGE from "auto" to "40px" */
-  min-width: auto;      /* ← CHANGE from "auto" to "40px" */
+  width: 40px;          /* ← CHANGE from "auto" to "40px" */
+  min-width: 40px;      /* ← CHANGE from "auto" to "40px" */
   white-space: nowrap;  /* ← ADD: prevents text wrapping */
 }
 
@@ -314,7 +314,7 @@ for(let i=1;i<=31;i++){
  html+=`<th style="width: 40px; height: 40px;">${days[d]}</th>`;
 }
 
-html+="</tr><tr>";
+html+="</tr><tr><th style='position: sticky; left: 0; background: #1e293b; width: auto; min-width: auto; height: auto; z-index: 10;'></th>";
 
 // Second row - Dates (1-31)
 for(let i=1;i<=31;i++){
