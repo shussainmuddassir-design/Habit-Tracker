@@ -24,16 +24,45 @@
       font-size: 20px;
     }
 
-    .menu {
-      position: absolute;
-      right: 10px;
-      top: 40px;
-      background: #1e293b;
-      padding: 10px;
-      border-radius: 10px;
-      display: none;
-    }
+.menu {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 80%;
+  max-width: 300px;
+  height: 100vh;
+  background: #1e293b;
+  padding: 20px;
+  box-shadow: -2px 0 10px rgba(0,0,0,0.5);
+  transform: translateX(100%);
+  transition: transform 0.3s ease-in-out;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
+.menu.open {
+  transform: translateX(0);
+}
+
+.menu-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.menu-close {
+  cursor: pointer;
+  font-size: 24px;
+  background: none;
+  border: none;
+  color: white;
+  padding: 0;
+}
+    
     input, button, select {
       padding: 8px;
       border-radius: 8px;
@@ -64,23 +93,34 @@
 
     .hidden { display: none; }
 
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      font-size: 12px;
-    }
+   table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+  table-layout: auto;
+}
 
-    th, td {
-      border: 1px solid #334155;
-      padding: 6px;
-      text-align: center;
-    }
+th, td {
+  border: 1px solid #334155;
+  padding: 6px;
+  text-align: center;
+  height: 40px;
+  width: 40px;
+  min-width: 40px;
+}
 
-    th:first-child, td:first-child {
-      position: sticky;
-      left: 0;
-      background: #1e293b;
-    }
+th:first-child, td:first-child {
+  position: sticky;
+  left: 0;
+  background: #1e293b;
+  width: auto;
+  min-width: auto;
+  padding: 8px 10px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
     .done { background: #22c55e; }
     .miss { background: #ef4444; }
@@ -112,11 +152,15 @@
 <div class="top-bar">
   <h3 id="dateTitle"></h3>
   <div>
-    <span class="settings" onclick="toggleMenu()">⚙️</span>
-    <div class="menu" id="menu">
-      <button onclick="clearData()">Reset</button>
-    </div>
+  <span class="settings" onclick="toggleMenu()">⚙️</span>
+</div>
+<div class="menu" id="menu">
+  <div class="menu-header">
+    <button class="menu-close" onclick="toggleMenu()"><</button>
+    <span>Settings</span>
   </div>
+  <button onclick="clearData()" style="width: 100%;">Reset</button>
+</div>
 </div>
 
 <input id="habitInput" placeholder="Add habit">
@@ -175,7 +219,7 @@ function clearData(){
 
 function toggleMenu(){
   let m = document.getElementById("menu");
-  m.style.display = m.style.display === "block" ? "none" : "block";
+  m.classList.toggle("open");
 }
 
 function initMonth(key){
@@ -256,21 +300,27 @@ function renderMonthly(){
   let now = new Date();
   let isCurrentMonth = (currentMonth === now.getMonth() && currentYear === now.getFullYear());
 
-  let html="<table><tr><th>Habit</th>";
+  // Calculate maximum habit name length to adjust first column
+let maxLength = Math.max(...habits.map(h => h.length), 7); // minimum 7 for "Habit"
+let habitColWidth = Math.min(200, 80 + (maxLength * 8));
 
-  for(let i=1;i<=31;i++){
-    html+=`<th>${i}</th>`;
-  }
+let html=`<table style="width: auto;"><tr><th style="width: ${habitColWidth}px; min-width: ${habitColWidth}px; vertical-align: middle;" rowspan="2">Habit</th>`;
 
-  html+="</tr><tr><th></th>";
+// First row - Days of week
+let days=["S","M","T","W","T","F","S"];
+for(let i=1;i<=31;i++){
+  let d=new Date(currentYear,currentMonth,i).getDay();
+  html+=`<th>${days[d]}</th>`;
+}
 
-  let days=["S","M","T","W","T","F","S"];
-  for(let i=1;i<=31;i++){
-    let d=new Date(currentYear,currentMonth,i).getDay();
-    html+=`<th>${days[d]}</th>`;
-  }
+html+="</tr><tr>";
 
-  html+="</tr>";
+// Second row - Dates (1-31)
+for(let i=1;i<=31;i++){
+  html+=`<th>${i}</th>`;
+}
+
+html+="</tr>";
 
   habits.forEach((h,i)=>{
     html+=`<tr><td>${h}</td>`;
@@ -298,20 +348,22 @@ function renderMonthly(){
 
 function switchTab(tab){
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active-tab"));
-
-  if(tab==="daily"){
+    if(tab==="daily"){
     dailyView.classList.remove("hidden");
     monthlyView.classList.add("hidden");
     monthContainer.classList.add("hidden");
+    document.getElementById("completedSection").classList.remove("hidden");
     document.querySelectorAll(".tab")[0].classList.add("active-tab");
   } else {
     dailyView.classList.add("hidden");
     monthlyView.classList.remove("hidden");
     monthContainer.classList.remove("hidden");
+    document.getElementById("completedSection").classList.add("hidden");
+    document.getElementById("completedHeader").innerText = "Completed ▶";
     document.querySelectorAll(".tab")[1].classList.add("active-tab");
   }
 }
-    
+     
 function changeMonth(){
   currentMonth=parseInt(document.getElementById("monthSelect").value);
   render();
