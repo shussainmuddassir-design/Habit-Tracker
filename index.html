@@ -1,383 +1,606 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Habit Tracker Pro</title>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Habit Tracker Pro</title>
 
   <style>
     body {
-      font-family: -apple-system;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #0f172a;
       color: white;
       padding: 10px;
       margin: 0;
+      overflow-x: hidden;
     }
 
     .top-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 10px 0;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #334155;
+    }
+
+    .top-bar h3 {
+      margin: 0;
+      font-size: 18px;
     }
 
     .settings {
       cursor: pointer;
-      font-size: 20px;
+      font-size: 24px;
+      transition: transform 0.2s ease;
     }
 
-.menu {
-  position: fixed;
-  right: 0;
-  top: 0;
-  width: 80%;
-  max-width: 300px;
-  height: 100vh;
-  background: #1e293b;
-  padding: 20px;
-  box-shadow: -2px 0 10px rgba(0,0,0,0.5);
-  transform: translateX(100%);
-  transition: transform 0.3s ease-in-out;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
+    .settings:hover {
+      transform: rotate(20deg);
+    }
 
-.menu.open {
-  transform: translateX(0);
-}
+    .menu {
+      position: fixed;
+      right: 0;
+      top: 0;
+      width: 80%;
+      max-width: 300px;
+      height: 100vh;
+      background: #1e293b;
+      padding: 20px;
+      box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
+      transform: translateX(100%);
+      transition: transform 0.3s ease-in-out;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+    }
 
-.menu-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 20px;
-  font-weight: bold;
-}
+    .menu.open {
+      transform: translateX(0);
+    }
 
-.menu-close {
-  cursor: pointer;
-  font-size: 24px;
-  background: none;
-  border: none;
-  color: white;
-  padding: 0;
-}
-    
+    .menu-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: bold;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 10px;
+    }
+
+    .menu-close {
+      cursor: pointer;
+      font-size: 24px;
+      background: none;
+      border: none;
+      color: white;
+      padding: 0;
+      margin: 0;
+    }
+
     input, button, select {
-      padding: 8px;
+      padding: 8px 12px;
       border-radius: 8px;
       border: none;
       margin: 5px 0;
+      font-size: 14px;
+      cursor: pointer;
     }
 
     button {
       background: #22c55e;
       color: white;
+      font-weight: 500;
+      transition: background 0.2s ease;
+    }
+
+    button:hover {
+      background: #16a34a;
     }
 
     .habit {
       background: #1e293b;
       padding: 12px;
-      border-radius: 10px;
+      border-radius: 8px;
       margin-top: 8px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      border: 1px solid #334155;
+      transition: all 0.2s ease;
     }
 
-    .completed { opacity: 0.4; }
+    .habit:hover {
+      background: #334155;
+      border-color: #64748b;
+    }
 
-    .section { margin-top: 15px; }
+    .habit span {
+      flex: 1;
+      word-break: break-word;
+    }
 
-    .section h3 { cursor: pointer; }
+    .habit input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
 
-    .hidden { display: none; }
+    .habit.completed {
+      opacity: 0.5;
+    }
 
-  table {
-  border-collapse: collapse;
-  width: 100%;
-  font-size: 12px;
-  table-layout: fixed;  /* ← CHANGE from "auto" to "fixed" */
-}
+    .section {
+      margin-top: 20px;
+    }
 
-th, td {
-  border: 1px solid #334155;
-  padding: 8px 6px;
-  text-align: center;
-  height: auto;         /* ← CHANGE from "auto" to "40px" */
-  width: 40px;          /* ← CHANGE from "auto" to "40px" */
-  min-width: 40px;      /* ← CHANGE from "auto" to "40px" */
-  white-space: nowrap;  /* ← ADD: prevents text wrapping */
-}
+    .section h3 {
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.2s ease;
+      padding: 10px;
+      background: #1e293b;
+      border-radius: 6px;
+      margin: 10px 0;
+    }
 
-th:first-child, td:first-child {
-  position: sticky;
-  left: 0;
-  background: #1e293b;
-  width: auto;          /* ← KEEP: allows dynamic width */
-  min-width: auto;      /* ← KEEP: allows dynamic width */
-  height: auto;         /* ← ADD: allows dynamic height for habit names */
-  padding: 8px 10px;
-  text-align: left;
-  white-space: nowrap;  /* ← ADD: keeps habit names in one line */
-  overflow: hidden;     /* ← ADD: prevents overflow */
-  text-overflow: ellipsis; /* ← ADD: shows ... if text is too long */
-}
+    .section h3:hover {
+      color: #22c55e;
+    }
 
-    .done { background: #22c55e; }
-    .miss { background: #ef4444; }
-    .future { background: #ffffff; color: black; }
+    .hidden {
+      display: none;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 12px;
+      table-layout: fixed;
+      margin: 10px 0;
+      background: #1e293b;
+    }
+
+    th {
+      border: 1px solid #334155;
+      padding: 6px;
+      text-align: center;
+      height: 40px;
+      width: 40px;
+      min-width: 40px;
+      white-space: nowrap;
+      font-weight: 600;
+      background: #0f172a;
+    }
+
+    td {
+      border: 1px solid #334155;
+      padding: 6px;
+      text-align: center;
+      height: 40px;
+      width: 40px;
+      min-width: 40px;
+      white-space: nowrap;
+    }
+
+    th:first-child,
+    td:first-child {
+      position: sticky;
+      left: 0;
+      background: #1e293b;
+      width: auto;
+      min-width: auto;
+      height: auto;
+      padding: 8px 10px;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      z-index: 10;
+      font-weight: 500;
+    }
+
+    td.done {
+      background: #22c55e;
+      color: white;
+      font-weight: bold;
+    }
+
+    td.miss {
+      background: #ef4444;
+      color: white;
+      font-weight: bold;
+    }
+
+    td.future {
+      background: #ffffff;
+      color: #0f172a;
+      font-weight: bold;
+    }
+
+    #monthContainer {
+      margin-top: 15px;
+      margin-bottom: 70px;
+    }
+
+    #monthContainer label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    #monthContainer select {
+      width: 100%;
+      background: #1e293b;
+      color: white;
+      border: 1px solid #334155;
+      padding: 8px 12px;
+      border-radius: 6px;
+    }
 
     .bottom-nav {
       position: fixed;
       bottom: 0;
+      left: 0;
       width: 100%;
       display: flex;
       background: #1e293b;
+      border-top: 1px solid #334155;
+      z-index: 100;
     }
 
     .tab {
       flex: 1;
       text-align: center;
-      padding: 10px;
+      padding: 12px;
       cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+      border-right: 1px solid #334155;
     }
 
-    .active-tab { background: #22c55e; }
+    .tab:last-child {
+      border-right: none;
+    }
 
-    #monthContainer { margin-top: 10px; }
+    .tab:hover {
+      background: #334155;
+    }
+
+    .tab.active-tab {
+      background: #22c55e;
+      color: #0f172a;
+      font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 5px;
+      }
+
+      .top-bar h3 {
+        font-size: 16px;
+      }
+
+      table {
+        font-size: 11px;
+      }
+
+      th, td {
+        padding: 4px;
+        height: 35px;
+      }
+    }
   </style>
 </head>
 
 <body>
-
-<div class="top-bar">
-  <h3 id="dateTitle"></h3>
-  <div>
-  <span class="settings" onclick="toggleMenu()">⚙️</span>
-</div>
-<div class="menu" id="menu">
-  <div class="menu-header">
-    <button class="menu-close" onclick="toggleMenu()"><</button>
-    <span>Settings</span>
+  <div class="top-bar">
+    <h3 id="dateTitle">Loading...</h3>
+    <span class="settings" onclick="toggleMenu()" title="Settings">⚙️</span>
   </div>
-  <button onclick="clearData()" style="width: 100%;">Reset</button>
-</div>
-</div>
 
-<input id="habitInput" placeholder="Add habit">
-<button onclick="addHabit()">Add</button>
+  <div class="menu" id="menu">
+    <div class="menu-header">
+      <button class="menu-close" onclick="toggleMenu()">←</button>
+      <span>Settings</span>
+    </div>
+    <button onclick="clearData()" style="width: 100%;">🗑️ Reset All Data</button>
+  </div>
 
-<div id="dailyView"></div>
+  <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+    <input 
+      id="habitInput" 
+      placeholder="Enter a habit name..."
+      onkeypress="if(event.key==='Enter') addHabit()"
+      style="flex: 1;"
+    >
+    <button onclick="addHabit()">➕ Add</button>
+  </div>
 
-<div class="section">
-  <h3 id="completedHeader" onclick="toggleCompleted()">Completed ▶</h3>
-  <div id="completedSection" class="hidden"></div>
-</div>
+  <div id="dailyView" style="margin-bottom: 20px;"></div>
 
-<div id="monthContainer" class="hidden">
-  <select id="monthSelect" onchange="changeMonth()"></select>
-</div>
+  <div class="section">
+    <h3 id="completedHeader" onclick="toggleCompleted()">Completed ▶</h3>
+    <div id="completedSection" class="hidden"></div>
+  </div>
 
-<div id="monthlyView" class="hidden"></div>
+  <div id="monthContainer" class="hidden">
+    <label for="monthSelect">Select Month:</label>
+    <select id="monthSelect" onchange="changeMonth()"></select>
+  </div>
 
-<div class="bottom-nav">
-  <div class="tab active-tab" onclick="switchTab('daily')">Daily</div>
-  <div class="tab" onclick="switchTab('monthly')">Monthly</div>
-</div>
+  <div id="monthlyView" class="hidden" style="overflow-x: auto; margin-bottom: 70px;"></div>
 
-<script>
-let data = JSON.parse(localStorage.getItem("habitData")) || {};
-let habits = JSON.parse(localStorage.getItem("habits")) || [];
+  <div class="bottom-nav">
+    <div class="tab active-tab" onclick="switchTab('daily')">📅 Daily</div>
+    <div class="tab" onclick="switchTab('monthly')">📊 Monthly</div>
+  </div>
 
-// Fix old object data
-habits = habits.map(h => typeof h === "object" ? h.name : h);
+  <script>
+    let data = JSON.parse(localStorage.getItem("habitData")) || {};
+    let habits = JSON.parse(localStorage.getItem("habits")) || [];
 
-let todayDate = new Date();
-let currentMonth = todayDate.getMonth();
-let currentYear = todayDate.getFullYear();
-let today = todayDate.getDate();
+    habits = habits.map(h => typeof h === "object" ? h.name : h);
 
-document.getElementById("dateTitle").innerText = todayDate.toDateString();
+    let todayDate = new Date();
+    let currentMonth = todayDate.getMonth();
+    let currentYear = todayDate.getFullYear();
+    let today = todayDate.getDate();
 
-const months = ["January","February","March","April","May","June",
-"July","August","September","October","November","December"];
+    document.getElementById("dateTitle").innerText = todayDate.toDateString();
 
-let select = document.getElementById("monthSelect");
-months.forEach((m,i)=> select.innerHTML += `<option value="${i}">${m}</option>`);
-select.value = currentMonth;
+    const months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
 
-function save(){
-  localStorage.setItem("habitData", JSON.stringify(data));
-  localStorage.setItem("habits", JSON.stringify(habits));
-}
+    let select = document.getElementById("monthSelect");
+    months.forEach((month, index) => {
+      select.innerHTML += `<option value="${index}">${month}</option>`;
+    });
+    select.value = currentMonth;
 
-function clearData(){
-  if(confirm("Reset all data?")){
-    localStorage.clear();
-    location.reload();
-  }
-}
+    function save() {
+      localStorage.setItem("habitData", JSON.stringify(data));
+      localStorage.setItem("habits", JSON.stringify(habits));
+    }
 
-function toggleMenu(){
-  let m = document.getElementById("menu");
-  m.classList.toggle("open");
-}
+    function initMonth(monthKey) {
+      if (!data[monthKey]) {
+        data[monthKey] = habits.map(() => Array(31).fill(""));
+      }
+    }
 
-function initMonth(key){
-  if(!data[key]){
-    data[key] = habits.map(()=> Array(31).fill(""));
-  }
-}
+    function getMonthKey(year, month) {
+      return `${year}-${month}`;
+    }
 
-function addHabit(){
-  let input = document.getElementById("habitInput");
-  if(!input.value.trim()) return;
+    function toggleMenu() {
+      let menu = document.getElementById("menu");
+      menu.classList.toggle("open");
+    }
 
-  habits.push(input.value);
-  Object.keys(data).forEach(m=> data[m].push(Array(31).fill("")));
-  input.value="";
-  save(); render();
-}
+    function clearData() {
+      if (confirm("⚠️ Are you sure? This will delete ALL habits and data!")) {
+        localStorage.clear();
+        location.reload();
+      }
+    }
 
-function toggleHabit(i){
-  let key = currentYear+"-"+currentMonth;
-  initMonth(key);
+    function toggleCompleted() {
+      let section = document.getElementById("completedSection");
+      let header = document.getElementById("completedHeader");
 
-  let val = data[key][i][today-1];
-  data[key][i][today-1] = val==="done" ? "" : "done";
+      section.classList.toggle("hidden");
+      header.innerText = section.classList.contains("hidden")
+        ? "Completed ▶"
+        : "Completed ▼";
+    }
 
-  save(); render();
-}
+    function switchTab(tabName) {
+      const dailyView = document.getElementById("dailyView");
+      const monthlyView = document.getElementById("monthlyView");
+      const monthContainer = document.getElementById("monthContainer");
+      const completedSection = document.getElementById("completedSection");
+      const completedHeader = document.getElementById("completedHeader");
+      const tabs = document.querySelectorAll(".tab");
 
-function editHabit(i,val){
-  habits[i]=val.trim();
-  save();
-  render();
-}
+      tabs.forEach(tab => tab.classList.remove("active-tab"));
 
-function renderDaily(){
-  let key = currentYear+"-"+currentMonth;
-  initMonth(key);
-
-  let activeHTML="";
-  let completedHTML="";
-
-  habits.forEach((h,i)=>{
-    let done = data[key][i][today-1]==="done";
-
-    let row = `
-      <div class="habit ${done?"completed":""}">
-        <span contenteditable="true" 
-          onblur="editHabit(${i}, this.innerText)">
-          ${h}
-        </span>
-        <input type="checkbox" ${done?"checked":""}
-          onchange="toggleHabit(${i})">
-      </div>`;
-
-    if(done) completedHTML += row;
-    else activeHTML += row;
-  });
-
-  document.getElementById("dailyView").innerHTML = activeHTML;
-  document.getElementById("completedSection").innerHTML = completedHTML;
-}
-
-function toggleCompleted(){
-  let el = document.getElementById("completedSection");
-  let header = document.getElementById("completedHeader");
-
-  el.classList.toggle("hidden");
-
-  header.innerText = el.classList.contains("hidden") 
-    ? "Completed ▶" 
-    : "Completed ▼";
-}
-
-function renderMonthly(){
-  let key = currentYear+"-"+currentMonth;
-  initMonth(key);
-
-  let now = new Date();
-  let isCurrentMonth = (currentMonth === now.getMonth() && currentYear === now.getFullYear());
-
-  // Calculate maximum habit name length to adjust first column
-let maxLength = Math.max(...habits.map(h => h.length), 7); // minimum 7 for "Habit"
-let habitColWidth = Math.min(200, 80 + (maxLength * 8));
-
-let html=`<table style="width: auto;"><tr><th style="width: ${habitColWidth}px; min-width: ${habitColWidth}px; height: auto; vertical-align: middle;" rowspan="2">Habit</th>`;
-// First row - Days of week
-let days=["S","M","T","W","T","F","S"];
-for(let i=1;i<=31;i++){
-  let d=new Date(currentYear,currentMonth,i).getDay();
- html+=`<th style="width: 40px; height: 40px;">${days[d]}</th>`;
-}
-
-html+="</tr><tr><th style='position: sticky; left: 0; background: #1e293b; width: auto; min-width: auto; height: auto; z-index: 10;'></th>";
-
-// Second row - Dates (1-31)
-for(let i=1;i<=31;i++){
- html+=`<th style="width: 40px; height: 40px;">${i}</th>`;
-}
-
-html+="</tr>";
-
-  habits.forEach((h,i)=>{
-   html+=`<tr><td style="width: auto; height: auto;">${h}</td>`;
-
-    data[key][i].forEach((d,idx)=>{
-      let cls="";
-
-      if (isCurrentMonth) {
-        if(idx+1 < now.getDate()) cls = d==="done"?"done":"miss";
-        else if(idx+1 === now.getDate()) cls = d==="done"?"done":"";
-        else cls="future";
+      if (tabName === "daily") {
+        // Daily view: show completed section
+        dailyView.classList.remove("hidden");
+        monthlyView.classList.add("hidden");
+        monthContainer.classList.add("hidden");
+        completedHeader.classList.remove("hidden");
+        completedSection.classList.add("hidden");
+        tabs[0].classList.add("active-tab");
       } else {
-        cls = d==="done" ? "done" : (d ? "miss" : "");
+        // Monthly view: hide completed section and header
+        dailyView.classList.add("hidden");
+        monthlyView.classList.remove("hidden");
+        monthContainer.classList.remove("hidden");
+        completedHeader.classList.add("hidden");
+        completedSection.classList.add("hidden");
+        tabs[1].classList.add("active-tab");
+      }
+    }
+
+    function changeMonth() {
+      currentMonth = parseInt(document.getElementById("monthSelect").value);
+      render();
+    }
+
+    function addHabit() {
+      let input = document.getElementById("habitInput");
+      let habitName = input.value.trim();
+
+      if (!habitName) {
+        alert("Please enter a habit name!");
+        return;
       }
 
-      html+=`<td class="${cls}"></td>`;
-    });
+      habits.push(habitName);
+      Object.keys(data).forEach(monthKey => {
+        data[monthKey].push(Array(31).fill(""));
+      });
 
-    html+="</tr>";
-  });
+      input.value = "";
+      save();
+      render();
+    }
 
-  html+="</table>";
-  document.getElementById("monthlyView").innerHTML=html;
-}
+    function toggleHabit(habitIndex) {
+      let monthKey = getMonthKey(currentYear, currentMonth);
+      initMonth(monthKey);
 
-function switchTab(tab){
-  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active-tab"));
-    if(tab==="daily"){
-    dailyView.classList.remove("hidden");
-    monthlyView.classList.add("hidden");
-    monthContainer.classList.add("hidden");
-   document.getElementById("completedSection").classList.add("hidden");
-    document.querySelectorAll(".tab")[0].classList.add("active-tab");
-  } else {
-    dailyView.classList.add("hidden");
-    monthlyView.classList.remove("hidden");
-    monthContainer.classList.remove("hidden");
-    document.getElementById("completedSection").classList.add("hidden");
-    document.getElementById("completedHeader").innerText = "Completed ▶";
-    document.querySelectorAll(".tab")[1].classList.add("active-tab");
-  }
-}
-     
-function changeMonth(){
-  currentMonth=parseInt(document.getElementById("monthSelect").value);
-  render();
-}
+      let currentValue = data[monthKey][habitIndex][today - 1];
+      data[monthKey][habitIndex][today - 1] = 
+        currentValue === "done" ? "" : "done";
 
-function render(){
-  renderDaily();
-  renderMonthly();
-}
+      save();
+      render();
+    }
 
-render();
-</script>
+    function editHabit(habitIndex, newName) {
+      let trimmedName = newName.trim();
 
+      if (!trimmedName) {
+        alert("Habit name cannot be empty!");
+        render();
+        return;
+      }
+
+      habits[habitIndex] = trimmedName;
+      save();
+      render();
+    }
+
+    function renderDaily() {
+      let monthKey = getMonthKey(currentYear, currentMonth);
+      initMonth(monthKey);
+
+      let activeHTML = "";
+      let completedHTML = "";
+
+      habits.forEach((habitName, habitIndex) => {
+        let isCompletedToday = data[monthKey][habitIndex][today - 1] === "done";
+
+        let habitHTML = `
+          <div class="habit ${isCompletedToday ? "completed" : ""}">
+            <span 
+              contenteditable="true" 
+              onblur="editHabit(${habitIndex}, this.innerText)"
+              title="Click to edit"
+            >
+              ${habitName}
+            </span>
+            <input 
+              type="checkbox" 
+              ${isCompletedToday ? "checked" : ""}
+              onchange="toggleHabit(${habitIndex})"
+            >
+          </div>
+        `;
+
+        if (isCompletedToday) {
+          completedHTML += habitHTML;
+        } else {
+          activeHTML += habitHTML;
+        }
+      });
+
+      document.getElementById("dailyView").innerHTML = activeHTML;
+      document.getElementById("completedSection").innerHTML = completedHTML;
+    }
+
+    function renderMonthly() {
+      let monthKey = getMonthKey(currentYear, currentMonth);
+      initMonth(monthKey);
+
+      let now = new Date();
+      let isCurrentMonth = (
+        currentMonth === now.getMonth() &&
+        currentYear === now.getFullYear()
+      );
+
+      // Calculate how many days in this month
+      let daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+      // Calculate first column width
+      let maxHabitLength = Math.max(...habits.map(h => h.length), 7);
+      let habitColWidth = Math.min(200, 80 + (maxHabitLength * 8));
+
+      let html = `<table style="width: auto;">`;
+
+      // ROW 1: Days of week (S, M, T, W, T, F, S)
+      html += `<tr><th style="width: ${habitColWidth}px; min-width: ${habitColWidth}px;">Habit</th>`;
+      
+      const daysOfWeek = ["S", "M", "T", "W", "T", "F", "S"];
+      for (let day = 1; day <= daysInMonth; day++) {
+        let dayOfWeek = new Date(currentYear, currentMonth, day).getDay();
+        html += `<th>${daysOfWeek[dayOfWeek]}</th>`;
+      }
+      
+      html += `</tr>`;
+
+      // ROW 2: Date numbers (1 to daysInMonth)
+      html += `<tr><th style="width: ${habitColWidth}px; min-width: ${habitColWidth}px;"></th>`;
+      
+      for (let day = 1; day <= daysInMonth; day++) {
+        html += `<th>${day}</th>`;
+      }
+      
+      html += `</tr>`;
+
+      // DATA ROWS: One row per habit
+      habits.forEach((habitName, habitIndex) => {
+        html += `<tr><td>${habitName}</td>`;
+
+        // Loop through each day of the month
+        for (let day = 1; day <= daysInMonth; day++) {
+          let dayIndex = day - 1;
+          let status = data[monthKey][habitIndex][dayIndex];
+          let cellClass = "";
+
+          if (isCurrentMonth) {
+            if (day < now.getDate()) {
+              // Past days
+              cellClass = status === "done" ? "done" : "miss";
+            } else if (day === now.getDate()) {
+              // Today
+              cellClass = status === "done" ? "done" : "";
+            } else {
+              // Future days
+              cellClass = "future";
+            }
+          } else {
+            // Past/future month
+            cellClass = status === "done" ? "done" : (status ? "miss" : "");
+          }
+
+          html += `<td class="${cellClass}"></td>`;
+        }
+
+        html += `</tr>`;
+      });
+
+      html += `</table>`;
+      document.getElementById("monthlyView").innerHTML = html;
+    }
+
+    function render() {
+      renderDaily();
+      renderMonthly();
+    }
+
+    render();
+  </script>
 </body>
 </html>
-
