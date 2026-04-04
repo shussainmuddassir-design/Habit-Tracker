@@ -160,7 +160,7 @@
     table {
       border-collapse: collapse;
       width: 100%;
-      font-size: 12px;
+      font-size: 14px;
       table-layout: fixed;
       margin: 10px 0;
       background: #1e293b;
@@ -168,7 +168,7 @@
 
     th {
       border: 1px solid #334155;
-      padding: 6px;
+      padding: 8px;
       text-align: center;
       height: 40px;
       width: 40px;
@@ -180,7 +180,7 @@
 
     td {
       border: 1px solid #334155;
-      padding: 6px;
+      padding: 8px;
       text-align: center;
       height: 40px;
       width: 40px;
@@ -225,12 +225,12 @@
 
     #monthContainer {
       margin-top: 15px;
-      margin-bottom: 70px;
+      margin-bottom: 130px;
     }
 
     #monthContainer label {
       display: block;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
       font-weight: 500;
     }
 
@@ -245,7 +245,7 @@
 
     .bottom-nav {
       position: fixed;
-      bottom: 0;
+      bottom: 100px;
       left: 0;
       width: 100%;
       display: flex;
@@ -313,7 +313,7 @@
     <button onclick="clearData()" style="width: 100%;">🗑️ Reset All Data</button>
   </div>
 
-  <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+  <div id="habitInputContainer" style="display: flex; gap: 8px; margin-bottom: 15px;">
     <input 
       id="habitInput" 
       placeholder="Enter a habit name..."
@@ -410,7 +410,8 @@
       const completedSection = document.getElementById("completedSection");
       const completedHeader = document.getElementById("completedHeader");
       const tabs = document.querySelectorAll(".tab");
-
+      const habitInputContainer = document.getElementById("habitInputContainer");
+      
       tabs.forEach(tab => tab.classList.remove("active-tab"));
 
       if (tabName === "daily") {
@@ -421,6 +422,7 @@
         completedHeader.classList.remove("hidden");
         completedSection.classList.add("hidden");
         tabs[0].classList.add("active-tab");
+        habitInputContainer.classList.remove("hidden");
       } else {
         // Monthly view: hide completed section and header
         dailyView.classList.add("hidden");
@@ -429,6 +431,7 @@
         completedHeader.classList.add("hidden");
         completedSection.classList.add("hidden");
         tabs[1].classList.add("active-tab");
+        habitInputContainer.classList.add("hidden");
       }
     }
 
@@ -535,9 +538,9 @@
 
       // Calculate first column width
       let maxHabitLength = Math.max(...habits.map(h => h.length), 7);
-      let habitColWidth = Math.min(200, 80 + (maxHabitLength * 8));
+      let habitColWidth = Math.min(120, 50 + (maxHabitLength * 6));
 
-      let html = `<table style="width: auto;">`;
+      let html = `<table style="width: auto; margin-top: 5px;">`;
 
       // ROW 1: Days of week (S, M, T, W, T, F, S)
       html += `<tr><th style="width: ${habitColWidth}px; min-width: ${habitColWidth}px;">Habit</th>`;
